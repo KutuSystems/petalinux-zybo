@@ -83,7 +83,7 @@ set obj [get_filesets sim_1]
 # Empty (no sources present)
 add_files -norecurse sources/hdmi_display_tb1.vhd
 
-set_property used_in_synthesis false [get_files  /home/greg/github/XilinxIP/hdmi_display_v1_00_a/sources/hdmi_display_tb1.vhd]
+set_property used_in_synthesis false [get_files sources/hdmi_display_tb1.vhd]
 
 # Set 'sim_1' fileset properties
 set obj [get_filesets sim_1]
