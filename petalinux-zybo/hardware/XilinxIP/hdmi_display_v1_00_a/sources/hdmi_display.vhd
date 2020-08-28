@@ -63,7 +63,7 @@ use hdmi_display_v1_00_a.test_pattern;
 entity hdmi_display is
    generic
    (
-      USE_TEST_PATTERN     : integer := 0;
+      USE_TEST_PATTERN     : integer := 1;
       DEBUG_OUTPUTS        : integer := 0;
 
       -- Video frame parameters
@@ -236,6 +236,7 @@ begin
       generic map
       (
       -- Video frame parameters
+         RGB                  => 0,
          USR_HSIZE            => USR_HSIZE,
          USR_VSIZE            => USR_VSIZE
       )

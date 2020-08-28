@@ -17,6 +17,7 @@ entity test_pattern is
    generic
    (
       -- Video frame parameters
+      RGB                  : integer := 1;
       USR_HSIZE            : integer := 1920;
       USR_VSIZE            : integer := 1080
    );
@@ -50,12 +51,24 @@ architecture RTL of test_pattern is
    signal green                  : std_logic_vector(9 downto 0) := (others =>'0');
    signal blue                   : std_logic_vector(7 downto 0) := (others =>'0');
 
+   signal y_val                  : std_logic_vector(11 downto 0) := (others =>'0');
+   signal crcb_val               : std_logic_vector(11 downto 0) := (others =>'0');
+
 begin
 
    s_axis_mm2s_aresetn  <= not reset;
    s_axis_mm2s_tvalid   <= s_axis_mm2s_tvalid_sig;
 --   s_axis_mm2s_tdata	   <= X"00" & red & green & blue;
-   s_axis_mm2s_tdata	   <= X"00" & green(9 downto 2) & green(7 downto 0) & blue;
+
+   RGB_SEL : if (RGB = 1) generate
+      s_axis_mm2s_tdata	   <= X"00" & green(9 downto 2) & green(7 downto 0) & blue;
+   end generate;
+
+   YUV_SEL : if (RGB = 0) generate
+--      s_axis_mm2s_tdata	   <= X"00" & crcb_val & y_val;
+      s_axis_mm2s_tdata	   <= X"00" & crcb_val(11 downto 4) & y_val(11 downto 4) & crcb_val(3 downto 0) & y_val(3 downto 0);
+   end generate;
+
    s_axis_mm2s_tkeep	   <= "1111";
    s_axis_mm2s_tlast	   <= '0';
 
@@ -120,12 +133,20 @@ begin
                green <= green + 1;
             end if;
 
-            -- red increments with blue overflow
-      --      if fsync = '1' then
-      --         red <= (others =>'0');
-      --      elsif s_axis_mm2s_tready = '1' and s_axis_mm2s_tvalid_sig = '1' and (last_h_count = '1' or red = X"FF") then
-      --         red <= red + 1;
-      --      end if;
+            -- y increments horizontally
+            if fsync = '1' or (s_axis_mm2s_tready = '1' and s_axis_mm2s_tvalid_sig = '1' and (last_h_count = '1' or (y_val = X"fdc"))) then
+                y_val <= X"010";
+            elsif s_axis_mm2s_tready = '1' and s_axis_mm2s_tvalid_sig = '1' then
+                y_val <= y_val + 4;
+            end if;
+
+            -- crcb increments vertically
+            if fsync = '1' or (s_axis_mm2s_tready = '1' and s_axis_mm2s_tvalid_sig = '1' and last_h_count = '1' and (crcb_val = X"fdc")) then
+                crcb_val <= X"010";
+            elsif s_axis_mm2s_tready = '1' and s_axis_mm2s_tvalid_sig = '1' and last_h_count = '1' then
+                crcb_val <= crcb_val + 4;
+            end if;
+
          end if;
 
       end if;
